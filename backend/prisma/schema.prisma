@@ -1,0 +1,38 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Folder {
+  id        Int      @id @default(autoincrement())
+  name      String
+  parentId  Int?     
+  parent    Folder?  @relation("FolderToFolder", fields: [parentId], references: [id])
+  children  Folder[] @relation("FolderToFolder")
+  files     File[]   @relation("FolderToFile")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId]) // Index for faster parent-child lookups
+  @@unique([name, parentId]) // Unique folder names within the same parent
+}
+
+model File {
+  id        Int      @id @default(autoincrement())
+  name      String
+  folderId  Int
+  folder    Folder   @relation("FolderToFile", fields: [folderId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([folderId]) // Index for fast lookup of files in a folder
+  @@unique([name, folderId]) // Unique file names inside the same folder
+}
+
